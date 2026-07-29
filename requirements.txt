@@ -1,0 +1,14 @@
+tensorflow==2.10.1
+numpy>=1.23,<2.0
+opencv-python>=4.7
+pillow>=9.0
+scikit-learn>=1.2
+scipy>=1.9
+matplotlib>=3.6
+seaborn>=0.12
+pandas>=1.5
+pytest>=7.0
+
+# XAI extras (only needed for lxnet.xai.lime_explanation)
+lime>=0.2.0.1
+scikit-image>=0.19
