@@ -16,11 +16,12 @@ DEFAULT_LAYER = "final_conv"
 
 
 def _feature_layer(model: tf.keras.Model, layer_name: str | None) -> str:
-    if layer_name is None:
-        return DEFAULT_LAYER
-    if layer_name not in {layer.name for layer in model.layers}:
-        raise ValueError(f"layer {layer_name!r} not found in model {model.name!r}")
-    return layer_name
+    name = layer_name or DEFAULT_LAYER
+    if name not in {layer.name for layer in model.layers}:
+        # The default was previously returned unchecked, so a model without the
+        # attachment point failed later inside get_layer with no hint of why.
+        raise ValueError(f"layer {name!r} not found in model {model.name!r}")
+    return name
 
 
 def _normalise(heatmap: np.ndarray) -> np.ndarray:

@@ -69,7 +69,9 @@ These are choices where following the paper exactly would produce a number that 
 
 **4. Conservative augmentation.** Horizontal flip, mild brightness/contrast. No vertical flip or large rotation: an inverted chest X-ray is not a plausible clinical image, and mirroring is itself diagnostically meaningful (dextrocardia, situs inversus).
 
-**5. Split whole near-duplicate groups, not images.** Exact hashing catches only byte-identical files. Re-saving an X-ray at a different JPEG quality changes every byte while leaving the picture the same, and this dataset is full of those: 6,657 unique files reduce to 4,635 visually distinct images. Splitting per-image therefore leaks 40.4% of the test set. `group_aware_split` and `group_aware_folds` deal out whole perceptual groups instead, so no image in evaluation has a twin in training. `--split-mode random` reproduces the leaky protocol for comparison.
+**5. Cross-validation scores each fold once, on data that chose nothing.** Early stopping with `restore_best_weights` picks the best of up to 40 epochs. Monitoring that on the fold being reported turns the score into a maximum over 40 draws — the same "evaluate on what you fitted to" error as the leakage this repo is about, one level up. Each fold's early-stopping monitor is carved out of its *training* rows (`_carve_validation`), so the held-out fold is touched exactly once, at scoring time.
+
+**6. Split whole near-duplicate groups, not images.** Exact hashing catches only byte-identical files. Re-saving an X-ray at a different JPEG quality changes every byte while leaving the picture the same, and this dataset is full of those: 6,657 unique files reduce to 4,635 visually distinct images. Splitting per-image therefore leaks 40.4% of the test set. `group_aware_split` and `group_aware_folds` deal out whole perceptual groups instead, so no image in evaluation has a twin in training. `--split-mode random` reproduces the leaky protocol for comparison.
 
 Why exact-match grouping: chest X-rays are near-identical by construction — same anatomy, same framing, low contrast — so any Hamming tolerance chains distinct images together transitively. Largest resulting group by threshold:
 
@@ -125,7 +127,7 @@ Preprocessing is cached to `runs/<name>/preprocessed.npz` as CLAHE'd grayscale u
 ## Tests
 
 ```bash
-pytest -q               # 110 tests
+pytest -q               # 115 tests
 pytest -m "not slow"    # skips baseline construction (downloads ImageNet weights)
 ```
 

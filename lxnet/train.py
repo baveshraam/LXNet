@@ -178,16 +178,23 @@ def cross_validate(
     results = []
 
     for fold, (train_idx, val_idx) in enumerate(fold_pairs, start=1):
+        # Early stopping needs a monitor set, and it must not be the fold being
+        # scored: restore_best_weights picks the best of ~40 epochs, so scoring
+        # on the monitor reports the maximum over 40 draws rather than the
+        # model's accuracy. Carve the monitor out of the training rows instead.
+        inner_train, inner_val = _carve_validation(train_idx, labels, seed=seed + fold)
         if balance:
-            train_idx = _oversample_indices(train_idx, labels, seed=seed + fold)
+            # Carve first, then balance, so an oversampled copy cannot straddle
+            # the two -- the same ordering the hold-out arm uses.
+            inner_train = _oversample_indices(inner_train, labels, seed=seed + fold)
 
         metrics, _ = train_once(
             model_name,
             images,
             labels,
-            train_idx,
-            val_idx,
-            val_idx,  # the held-out fold is the evaluation set
+            inner_train,
+            inner_val,  # early stopping monitor
+            val_idx,  # the held-out fold, scored once
             out_dir,
             epochs=epochs,
             batch_size=batch_size,
@@ -197,6 +204,33 @@ def cross_validate(
         results.append(metrics)
 
     return results
+
+
+def _carve_validation(
+    idx: np.ndarray, labels: np.ndarray, seed: int, fraction: float = 0.15
+) -> tuple[np.ndarray, np.ndarray]:
+    """Split fold-training rows into (train, early-stopping monitor), stratified.
+
+    ponytail: carves by row, not by perceptual group, so a near-duplicate may
+    straddle the inner boundary. That only blunts the stopping-epoch choice --
+    the reported score comes from the outer fold, which stays group-clean. Carve
+    by group if the stopping epoch ever looks systematically late.
+    """
+    rng = np.random.default_rng(seed)
+    by_label: dict[int, list[int]] = {}
+    for i in idx:
+        by_label.setdefault(int(labels[i]), []).append(int(i))
+
+    monitor: list[int] = []
+    for label in sorted(by_label):
+        rows = np.array(by_label[label], dtype=np.int64)
+        rng.shuffle(rows)
+        n = min(len(rows) - 1, max(1, int(round(len(rows) * fraction))))
+        monitor.extend(rows[:n].tolist())
+
+    held = set(monitor)
+    train = np.array(sorted(int(i) for i in idx if int(i) not in held), dtype=np.int64)
+    return train, np.array(sorted(monitor), dtype=np.int64)
 
 
 def _oversample_indices(idx: np.ndarray, labels: np.ndarray, seed: int) -> np.ndarray:

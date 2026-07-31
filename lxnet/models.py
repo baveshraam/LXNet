@@ -43,12 +43,16 @@ def build_lxnet(
     x = _conv_block(x, 64, dropout=0.1, block=2)
 
     # Final block is named so the CAM methods have a stable attachment point.
+    # The name sits on the ReLU, not the Conv2D: CAM methods weight *feature
+    # maps*, and the raw convolution output is pre-BatchNorm (so its per-channel
+    # scale is arbitrary) and signed (so a channel's negative half survives into
+    # the weighted sum). Post-activation is what Grad-CAM is defined over.
     x = layers.Conv2D(128, 3, padding="same", use_bias=False, name="conv3_1")(x)
     x = layers.BatchNormalization(name="bn3_1")(x)
     x = layers.Activation("relu", name="relu3_1")(x)
-    x = layers.Conv2D(128, 3, padding="same", use_bias=False, name="final_conv")(x)
+    x = layers.Conv2D(128, 3, padding="same", use_bias=False, name="conv3_2")(x)
     x = layers.BatchNormalization(name="bn3_2")(x)
-    x = layers.Activation("relu", name="relu3_2")(x)
+    x = layers.Activation("relu", name="final_conv")(x)
     x = layers.MaxPooling2D(2, name="pool3")(x)
     x = layers.Dropout(0.2, name="drop3")(x)
 

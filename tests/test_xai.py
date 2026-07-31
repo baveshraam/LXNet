@@ -81,3 +81,17 @@ class TestOverlay:
     def test_resizes_a_smaller_heatmap_to_the_image(self, image):
         small = np.linspace(0, 1, 28 * 28).reshape(28, 28).astype(np.float32)
         assert overlay_heatmap(image, small).shape == (224, 224, 3)
+
+
+def test_cam_attachment_point_is_post_activation():
+    """CAM weights feature maps; pre-BatchNorm conv output is signed and unscaled."""
+    import numpy as np
+    import tensorflow as tf
+
+    from lxnet.models import build_lxnet
+    from lxnet.xai import DEFAULT_LAYER
+
+    model = build_lxnet()
+    probe = tf.keras.Model(model.inputs, model.get_layer(DEFAULT_LAYER).output)
+    features = probe(np.random.rand(1, 224, 224, 3).astype("float32")).numpy()
+    assert features.min() >= 0.0, "attachment point is not a rectified feature map"
