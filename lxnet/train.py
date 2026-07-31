@@ -227,6 +227,9 @@ def main(argv=None) -> int:
     parser.add_argument("--folds", type=int, default=5)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--skip-cv", action="store_true", help="hold-out evaluation only")
+    parser.add_argument(
+        "--allow-cpu", action="store_true", help="train without a GPU (slow; off by default)"
+    )
     parser.add_argument("--limit", type=int, help="use only N images (smoke test)")
     parser.add_argument(
         "--split-mode",
@@ -251,7 +254,15 @@ def main(argv=None) -> int:
     gpus = tf.config.list_physical_devices("GPU")
     for gpu in gpus:
         tf.config.experimental.set_memory_growth(gpu, True)
-    log.info("GPUs visible: %s", [g.name for g in gpus] or "none (training on CPU)")
+    log.info("GPUs visible: %s", [g.name for g in gpus] or "none")
+    if not gpus and not args.allow_cpu:
+        # TF 2.10 falls back to CPU silently when the conda env's Library/bin is
+        # off PATH, which turns a 40-minute run into an overnight one that looks
+        # fine in the log. Refuse rather than discover it tomorrow.
+        raise SystemExit(
+            "no GPU visible to TensorFlow -- refusing to train on CPU.\n"
+            "Activate the env (`conda activate lxnet`) so CUDA is on PATH, or pass --allow-cpu."
+        )
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
     samples, images, labels, digest_to_row, report = load_and_prepare(

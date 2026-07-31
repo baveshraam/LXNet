@@ -88,7 +88,7 @@ conda activate lxnet          # py3.10, TF 2.10.1, cudatoolkit 11.2, cudnn 8.1
 pip install -r requirements.txt
 ```
 
-GPU note: TF 2.10 finds CUDA only when the env's `Library/bin` is on `PATH`, which `conda activate` handles. Invoking `envs/lxnet/python.exe` by absolute path silently falls back to CPU.
+GPU note: TF 2.10 finds CUDA only when the env's `Library/bin` is on `PATH`, which `conda activate` handles. Invoking `envs/lxnet/python.exe` by absolute path silently falls back to CPU — so `lxnet.train` aborts when no GPU is visible rather than quietly spending the night on CPU. Pass `--allow-cpu` if that is genuinely what you want.
 
 ## Usage
 
@@ -125,7 +125,7 @@ Preprocessing is cached to `runs/<name>/preprocessed.npz` as CLAHE'd grayscale u
 ## Tests
 
 ```bash
-pytest -q               # 108 tests
+pytest -q               # 110 tests
 pytest -m "not slow"    # skips baseline construction (downloads ImageNet weights)
 ```
 
