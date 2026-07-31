@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from lxnet.preprocess import apply_clahe, load_image, IMAGE_SIZE
+from lxnet.preprocess import IMAGE_SIZE, apply_clahe, load_image
 
 
 @pytest.fixture
@@ -54,7 +54,9 @@ class TestApplyClahe:
 
 
 class TestLoadImage:
-    @pytest.mark.parametrize("mode,value", [("L", 120), ("RGB", (120, 120, 120)), ("RGBA", (120, 120, 120, 255))])
+    @pytest.mark.parametrize(
+        "mode,value", [("L", 120), ("RGB", (120, 120, 120)), ("RGBA", (120, 120, 120, 255))]
+    )
     def test_normalises_any_source_mode_to_three_channels(self, tmp_path, mode, value):
         p = tmp_path / f"{mode}.png"
         Image.new(mode, (80, 60), value).save(p)
@@ -75,7 +77,7 @@ class TestLoadImage:
         out = load_image(p)
 
         assert out.dtype == np.float32
-        assert 0.0 <= out.min() and out.max() <= 1.0
+        assert out.min() >= 0.0 and out.max() <= 1.0
 
     def test_channels_are_replicated_not_garbage(self, tmp_path):
         """A grayscale X-ray widened to 3 channels must have identical channels."""

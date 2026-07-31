@@ -147,7 +147,8 @@ def markdown_table(rows: list[dict]) -> str:
         return "—" if v is None else f"+{100 * v:.1f}"
 
     lines = [
-        "| Model | Params | Group-aware acc. (%) | Group-aware F1 | Random-split acc. (%) | Inflation (pp) |",
+        "| Model | Params | Group-aware acc. (%) | Group-aware F1 "
+        "| Random-split acc. (%) | Inflation (pp) |",
         "|---|---|---|---|---|---|",
     ]
     for r in rows:
@@ -199,7 +200,7 @@ def _gap_dumbbell(rows: list[dict], stem: Path, t: Theme) -> Path | None:
     ax.grid(axis="x", color=t.grid, linewidth=0.8)
     y = np.arange(len(paired))
 
-    for yi, r in zip(y, paired):
+    for yi, r in zip(y, paired, strict=True):
         g, rnd = 100 * r["grouped_accuracy"], 100 * r["random_accuracy"]
         ax.plot([g, rnd], [yi, yi], color=t.axis, linewidth=2.5, zorder=1, solid_capstyle="round")
         ax.scatter([g], [yi], s=150, color=t.honest, edgecolor=t.surface, linewidth=2, zorder=3)
@@ -230,10 +231,24 @@ def _gap_dumbbell(rows: list[dict], stem: Path, t: Theme) -> Path | None:
         pad=14,
     )
     handles = [
-        plt.Line2D([], [], marker="o", linestyle="", markersize=9, color=t.honest,
-                   label="Group-aware split (no twin in training)"),
-        plt.Line2D([], [], marker="o", linestyle="", markersize=9, color=t.leaky,
-                   label="Random split (paper protocol)"),
+        plt.Line2D(
+            [],
+            [],
+            marker="o",
+            linestyle="",
+            markersize=9,
+            color=t.honest,
+            label="Group-aware split (no twin in training)",
+        ),
+        plt.Line2D(
+            [],
+            [],
+            marker="o",
+            linestyle="",
+            markersize=9,
+            color=t.leaky,
+            label="Random split (paper protocol)",
+        ),
     ]
     ax.legend(handles=handles, frameon=False, fontsize=9, labelcolor=t.muted, loc="lower right")
     return _save(fig, _themed(stem, t), t)
@@ -254,7 +269,7 @@ def _efficiency(rows: list[dict], stem: Path, t: Theme) -> Path | None:
     xs = [r["params"] for r in pts]
     ys = [100 * r["grouped_accuracy"] for r in pts]
     ax.scatter(xs, ys, s=170, color=t.honest, edgecolor=t.surface, linewidth=2, zorder=3)
-    for r, x, y in zip(pts, xs, ys):
+    for r, x, y in zip(pts, xs, ys, strict=True):
         # Drop the label below when a neighbour sits just above it -- the
         # backbones cluster within ~1 pp and their labels would otherwise collide.
         crowded_above = any(
@@ -316,18 +331,34 @@ def _cv_folds(grouped: dict, stem: Path, t: Theme) -> Path | None:
         # Folds land within a few hundredths of each other, so plotting them on
         # one vertical would hide a point behind another. Spread them evenly.
         dodge = np.linspace(-0.13, 0.13, len(accs)) if len(accs) > 1 else np.zeros(1)
-        ax.scatter(i + dodge, accs, s=90, color=t.series[i % len(t.series)],
-                   edgecolor=t.surface, linewidth=2, zorder=3)
+        ax.scatter(
+            i + dodge,
+            accs,
+            s=90,
+            color=t.series[i % len(t.series)],
+            edgecolor=t.surface,
+            linewidth=2,
+            zorder=3,
+        )
         m = float(np.mean(accs))
         ax.plot([i - 0.24, i + 0.24], [m, m], color=t.ink, linewidth=2.5, zorder=4)
-        ax.text(i + 0.30, m, f"mean {m:.2f}%\nsd {np.std(accs):.2f}", va="center",
-                fontsize=9, color=t.ink)
+        ax.text(
+            i + 0.30,
+            m,
+            f"mean {m:.2f}%\nsd {np.std(accs):.2f}",
+            va="center",
+            fontsize=9,
+            color=t.ink,
+        )
     ax.set_xticks(range(len(names)), names, color=t.ink)
     ax.set_xlim(-0.5, len(names) + 0.25)
     ax.set_ylabel("Fold accuracy (%)", color=t.muted, fontsize=9)
     ax.set_title(
         "Cross-validation folds, group-aware\nEach dot is one held-out fold, scored once",
-        color=t.ink, fontsize=12, loc="left", pad=14,
+        color=t.ink,
+        fontsize=12,
+        loc="left",
+        pad=14,
     )
     return _save(fig, _themed(stem, t), t)
 
@@ -348,8 +379,9 @@ def _per_class(grouped: dict, class_names: list[str], stem: Path, t: Theme) -> P
 
     fig, ax = _fig(t, 7.8, 4.8, yaxis_grid=False)
     ax.grid(axis="x", color=t.grid, linewidth=0.8)
-    ax.barh(np.arange(len(order)), recall[order], 0.62,
-            color=t.honest, edgecolor=t.surface, linewidth=2)
+    ax.barh(
+        np.arange(len(order)), recall[order], 0.62, color=t.honest, edgecolor=t.surface, linewidth=2
+    )
     for i, v in enumerate(recall[order]):
         ax.text(v + 0.9, i, f"{v:.1f}%", va="center", fontsize=9, color=t.ink)
     ax.set_yticks(np.arange(len(order)), labels, color=t.ink, fontsize=9)
@@ -358,7 +390,10 @@ def _per_class(grouped: dict, class_names: list[str], stem: Path, t: Theme) -> P
     ax.set_xlabel("Recall (%)", color=t.muted, fontsize=9)
     ax.set_title(
         f"Hardest classes first — {name}, group-aware test set",
-        color=t.ink, fontsize=12, loc="left", pad=12,
+        color=t.ink,
+        fontsize=12,
+        loc="left",
+        pad=12,
     )
     return _save(fig, _themed(stem, t), t)
 
@@ -375,17 +410,18 @@ def _training_curves(histories: dict[str, dict], stem: Path, t: Theme) -> Path |
         xs = np.arange(1, len(ys) + 1)
         colour = t.series[i % len(t.series)]
         ax.plot(xs, ys, color=colour, linewidth=2, zorder=3, label=name)
-        ax.scatter([xs[-1]], [ys[-1]], s=45, color=colour,
-                   edgecolor=t.surface, linewidth=2, zorder=4)
+        ax.scatter(
+            [xs[-1]], [ys[-1]], s=45, color=colour, edgecolor=t.surface, linewidth=2, zorder=4
+        )
         ends.append([float(xs[-1]), float(ys[-1]), name, colour])
 
     # The models converge within a few points of each other, so the end labels
     # would land on top of one another. Push them apart, keeping their order.
     ends.sort(key=lambda e: -e[1])
     gap = 3.4
-    for prev, cur in zip(ends, ends[1:]):
+    for prev, cur in zip(ends, ends[1:], strict=False):
         cur[1] = min(cur[1], prev[1] - gap)
-    for x, y, name, colour in ends:
+    for x, y, name, _colour in ends:
         ax.text(x + 1.1, y, name, va="center", fontsize=9, color=t.ink)
 
     ax.set_xlabel("Epoch", color=t.muted, fontsize=9)
@@ -394,7 +430,10 @@ def _training_curves(histories: dict[str, dict], stem: Path, t: Theme) -> Path |
     ax.legend(frameon=False, fontsize=9, labelcolor=t.muted, loc="lower right", ncol=2)
     ax.set_title(
         "Training, group-aware split\nEarly stopping restores the best epoch",
-        color=t.ink, fontsize=12, loc="left", pad=14,
+        color=t.ink,
+        fontsize=12,
+        loc="left",
+        pad=14,
     )
     return _save(fig, _themed(stem, t), t)
 
@@ -410,8 +449,9 @@ def confusion_figure(
     fig.patch.set_facecolor(t.surface)
     ax.set_facecolor(t.surface)
     im = ax.imshow(norm, cmap=cmap, vmin=0, vmax=1)
-    ax.set_xticks(range(len(class_names)), class_names, rotation=45, ha="right",
-                  fontsize=8, color=t.muted)
+    ax.set_xticks(
+        range(len(class_names)), class_names, rotation=45, ha="right", fontsize=8, color=t.muted
+    )
     ax.set_yticks(range(len(class_names)), class_names, fontsize=8, color=t.muted)
     for i in range(len(class_names)):
         for j in range(len(class_names)):
@@ -421,8 +461,15 @@ def confusion_figure(
                 # dark ink on light cells, light ink on dark ones, both themes.
                 strong = norm[i, j] > 0.55
                 colour = t.surface if strong else t.muted
-                ax.text(j, i, f"{100 * norm[i, j]:.0f}", ha="center", va="center",
-                        fontsize=7.5, color=colour)
+                ax.text(
+                    j,
+                    i,
+                    f"{100 * norm[i, j]:.0f}",
+                    ha="center",
+                    va="center",
+                    fontsize=7.5,
+                    color=colour,
+                )
     ax.set_xlabel("Predicted", color=t.muted, fontsize=9)
     ax.set_ylabel("True", color=t.muted, fontsize=9)
     ax.set_title(title, color=t.ink, fontsize=12, loc="left", pad=12)
@@ -513,9 +560,7 @@ def _hero(rows: list[dict], grouped: dict, leaked: float) -> list[str]:
     lx = next((r for r in rows if r["model"] == "LXNet"), None)
     best = rows[0] if rows else None
     gap = (
-        f"+{100 * lx['inflation']:.1f} pp"
-        if lx and lx.get("inflation") is not None
-        else "pending"
+        f"+{100 * lx['inflation']:.1f} pp" if lx and lx.get("inflation") is not None else "pending"
     )
     spread = (
         f"{100 * (best['grouped_accuracy'] - lx['grouped_accuracy']):.1f} pp"
@@ -536,8 +581,7 @@ def _hero(rows: list[dict], grouped: dict, leaked: float) -> list[str]:
         ),
         cell.format(
             spread,
-            "LXNet trails the best<br>backbone once it is gone"
-            "<br><sub>group-aware hold-out</sub>",
+            "LXNet trails the best<br>backbone once it is gone<br><sub>group-aware hold-out</sub>",
         ),
         cell.format(
             f"{grouped['dedupe']['kept']:,}",
@@ -594,10 +638,185 @@ def _cv_section(grouped: dict) -> list[str]:
     return out
 
 
+def per_class_metrics(matrix) -> dict[str, np.ndarray]:
+    """Precision, recall, F1 and support per class, derived from a confusion matrix."""
+    cm = np.asarray(matrix, dtype=float)
+    support = cm.sum(axis=1)
+    predicted = cm.sum(axis=0)
+    hits = np.diag(cm)
+    recall = hits / np.clip(support, 1, None)
+    precision = hits / np.clip(predicted, 1, None)
+    denom = np.clip(precision + recall, 1e-12, None)
+    return {
+        "precision": precision,
+        "recall": recall,
+        "f1": 2 * precision * recall / denom,
+        "support": support,
+    }
+
+
+def _metrics_table(grouped: dict) -> list[str]:
+    """Every headline metric for every model, not just accuracy."""
+    holdout = grouped.get("holdout") or {}
+    if not holdout:
+        return []
+    ordered = sorted(holdout.items(), key=lambda kv: kv[1].get("accuracy") or 0, reverse=True)
+    lines = [
+        "### Every metric, group-aware hold-out",
+        "",
+        "| Model | Accuracy | Precision (macro) | Recall (macro) | Macro-F1 |",
+        "|---|---|---|---|---|",
+    ]
+    for name, m in ordered:
+        lines.append(
+            f"| {name} | {100 * m['accuracy']:.2f} | {100 * m['precision_macro']:.2f} "
+            f"| {100 * m['recall_macro']:.2f} | {m['f1_macro']:.4f} |"
+        )
+    lines += [
+        "",
+        "Macro averaging throughout. The dataset runs 1,340 Normal against 544 Chest "
+        "Changes, so a micro average would flatter any model that neglects the small "
+        "classes.",
+        "",
+    ]
+    return lines
+
+
+def _per_class_tables(grouped: dict, class_names: list[str]) -> list[str]:
+    """Per-class detail for LXNet, then recall for every model side by side."""
+    holdout = grouped.get("holdout") or {}
+    with_cm = {k: v for k, v in holdout.items() if v.get("confusion_matrix")}
+    if not with_cm:
+        return []
+
+    focus = "LXNet" if "LXNet" in with_cm else next(iter(with_cm))
+    stats = per_class_metrics(with_cm[focus]["confusion_matrix"])
+    lines = [
+        f"### Per-class detail — {focus}",
+        "",
+        "| Class | Precision | Recall | F1 | Support |",
+        "|---|---|---|---|---|",
+    ]
+    for i, name in enumerate(class_names[: len(stats["support"])]):
+        lines.append(
+            f"| {name} | {100 * stats['precision'][i]:.1f} | {100 * stats['recall'][i]:.1f} "
+            f"| {stats['f1'][i]:.3f} | {int(stats['support'][i])} |"
+        )
+
+    lines += ["", "### Recall by class, every model", "", "| Class |"]
+    ordered = sorted(with_cm, key=lambda k: with_cm[k]["accuracy"], reverse=True)
+    lines[-1] += "".join(f" {n} |" for n in ordered)
+    lines.append("|---|" + "---|" * len(ordered))
+    n_classes = len(next(iter(with_cm.values()))["confusion_matrix"])
+    for i, name in enumerate(class_names[:n_classes]):
+        row = f"| {name} |"
+        for model in ordered:
+            r = per_class_metrics(with_cm[model]["confusion_matrix"])["recall"][i]
+            row += f" {100 * r:.1f} |"
+        lines.append(row)
+    lines += [
+        "",
+        "The weakest cells are the ones that matter clinically: every model gives up "
+        "most of its accuracy on Pneumonia and Normal, the two classes a screening "
+        "tool exists to separate.",
+        "",
+    ]
+    return lines
+
+
+def _cost_table(grouped: dict) -> list[str]:
+    holdout = grouped.get("holdout") or {}
+    if not holdout:
+        return []
+    lines = [
+        "## Training cost",
+        "",
+        "| Model | Parameters | Epochs run | Wall clock | Accuracy per M params |",
+        "|---|---|---|---|---|",
+    ]
+    for name, m in sorted(holdout.items(), key=lambda kv: kv[1].get("params") or 0):
+        secs = m.get("train_seconds") or 0
+        per_m = (100 * m["accuracy"]) / max(m["params"] / 1e6, 1e-9)
+        lines.append(
+            f"| {name} | {m['params']:,} | {m.get('epochs_run', '—')} | "
+            f"{int(secs // 60)}m {int(secs % 60)}s | {per_m:,.1f} |"
+        )
+    lines += [
+        "",
+        "The last column is deliberately crude, but it is the paper's argument in one "
+        "number: LXNet extracts far more accuracy per parameter than any backbone, "
+        "while still finishing below all of them in absolute terms.",
+        "",
+    ]
+    return lines
+
+
+def _wilcoxon_section(grouped: dict) -> list[str]:
+    w = grouped.get("wilcoxon") or {}
+    cv = grouped.get("cross_validation") or {}
+    if not w:
+        return [
+            "## Significance testing",
+            "",
+            f"Not run. The Wilcoxon signed-rank test compares two models across paired "
+            f"folds, and only {len(cv)} model "
+            f"({', '.join(cv) or 'none'}) was cross-validated — the heavy backbones are "
+            "hold-out only for time reasons. Cross-validate a second model to populate "
+            "this section.",
+            "",
+        ]
+    lines = [
+        "## Significance testing",
+        "",
+        "| Comparison | p | Median difference | Significant |",
+        "|---|---|---|---|",
+    ]
+    for pair, res in w.items():
+        lines.append(
+            f"| {pair} | {res['p_value']:.4f} | {100 * res['median_difference']:+.2f} pp "
+            f"| {'yes' if res['significant'] else 'no'} |"
+        )
+    lines.append("")
+    return lines
+
+
+def _repro_section(grouped: dict, random_: dict | None) -> list[str]:
+    split = grouped["split"]
+    lines = [
+        "## Reproducibility record",
+        "",
+        "| | Group-aware arm | Random arm |",
+        "|---|---|---|",
+        f"| Split mode | `{grouped.get('split_mode')}` | "
+        f"`{(random_ or {}).get('split_mode', '—')}` |",
+        f"| Train / val / test | {split['train']} / {split['val']} / {split['test']} | "
+        + (
+            f"{random_['split']['train']} / {random_['split']['val']} / "
+            f"{random_['split']['test']} |"
+            if random_
+            else "— |"
+        ),
+        "| Seed | 42 | 42 |",
+        "| Max epochs | 40, early stopping patience 8 | 40, early stopping patience 8 |",
+        "| Batch size | 32 | 32 |",
+        "",
+        "Both arms consume the same cached CLAHE'd tensor, so preprocessing is bit-for-bit "
+        "identical between them. The only variable is the split function.",
+        "",
+        "Every figure on this page is generated by `python -m lxnet.report` from "
+        "`results.json`; none is drawn by hand.",
+        "",
+    ]
+    return lines
+
+
 def build_results_md(
     grouped: dict, random_: dict | None, leaked: float, figures: list[Path]
 ) -> str:
     """The whole document. Sections appear only when their figure exists."""
+    from .data import CLASS_LABELS
+
+    class_names = list(CLASS_LABELS.values())
     rows = build_comparison_table(grouped, random_)
     have = {p.stem for p in figures}
     body: list[str] = [
@@ -632,6 +851,7 @@ def build_results_md(
         "",
         markdown_table(rows),
     ]
+    body += _metrics_table(grouped)
 
     if "fig_efficiency" in have:
         body += [
@@ -649,22 +869,31 @@ def build_results_md(
 
     body += _cv_section(grouped)
 
+    body += ["## Where the errors are", ""]
     if "fig_per_class" in have:
-        body += ["## Where the errors are", "", picture("fig_per_class", "Per-class recall"), ""]
+        body += [picture("fig_per_class", "Per-class recall"), ""]
+    body += _per_class_tables(grouped, class_names)
 
+    body += ["### Confusion matrices", ""]
     for stem in sorted(p.stem for p in figures if p.stem.startswith("fig_confusion_")):
         model = stem.replace("fig_confusion_", "")
-        body += [f"### {model}", "", picture(stem, f"{model} confusion matrix"), ""]
+        body += [f"**{model}**", "", picture(stem, f"{model} confusion matrix"), ""]
 
     if "fig_training" in have:
         body += ["## Training", "", picture("fig_training", "Validation accuracy per epoch"), ""]
+    body += _cost_table(grouped)
+    body += _wilcoxon_section(grouped)
 
     body += [
         "## Dataset after cleaning",
         "",
-        f"- images indexed: {grouped['dedupe']['kept'] + grouped['dedupe']['exact_duplicates']:,}",
+        # Deliberately not summed into an "images indexed" total: the dedupe report
+        # counts conflict *groups*, not the files they dropped, so the arithmetic
+        # would be short by the conflicting copies.
+        f"- byte-unique images retained: {grouped['dedupe']['kept']:,}",
         f"- byte-identical duplicates removed: {grouped['dedupe']['exact_duplicates']}",
-        f"- cross-class label conflicts removed: {grouped['dedupe']['cross_class_conflicts']}",
+        f"- cross-class label conflict groups removed: "
+        f"{grouped['dedupe']['cross_class_conflicts']}",
         f"- split (train/val/test): {grouped['split']['train']}/"
         f"{grouped['split']['val']}/{grouped['split']['test']}",
         f"- random-split test images with a training twin: {100 * leaked:.1f}%",
@@ -678,6 +907,9 @@ def build_results_md(
         "python -m lxnet.report",
         "```",
         "",
+    ]
+    body += _repro_section(grouped, random_)
+    body += [
         "<sub>Figures render light or dark to match your GitHub theme. Palette validated "
         "for colour-vision deficiency in both modes.</sub>",
     ]

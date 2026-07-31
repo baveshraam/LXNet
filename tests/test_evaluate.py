@@ -8,7 +8,7 @@ so the tests pin the behaviour that exposes that.
 import numpy as np
 import pytest
 
-from lxnet.evaluate import compute_metrics, wilcoxon_compare, summarise_folds
+from lxnet.evaluate import compute_metrics, summarise_folds, wilcoxon_compare
 
 
 class TestComputeMetrics:

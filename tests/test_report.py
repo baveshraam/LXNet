@@ -1,5 +1,4 @@
 """Contract for turning results.json into tables and figures."""
-import json
 
 import pytest
 
@@ -18,7 +17,9 @@ def grouped_results():
         },
         "cross_validation": {
             "LXNet": {
-                "folds": [{"accuracy": a, "f1_macro": a - 0.01} for a in (0.70, 0.72, 0.69, 0.71, 0.73)],
+                "folds": [
+                    {"accuracy": a, "f1_macro": a - 0.01} for a in (0.70, 0.72, 0.69, 0.71, 0.73)
+                ],
                 "summary": {"accuracy_mean": 0.71, "accuracy_std": 0.014},
             }
         },

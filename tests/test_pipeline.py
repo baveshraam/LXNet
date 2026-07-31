@@ -6,8 +6,6 @@ tests guard the two things that break silently: image/label misalignment, and
 augmentation bleeding into evaluation data.
 """
 
-from pathlib import Path
-
 import numpy as np
 import pytest
 from PIL import Image
@@ -75,14 +73,18 @@ class TestMakeDataset:
     def test_scales_pixels_to_unit_range(self, samples):
         images, labels = build_cache(samples, size=(32, 32))
         x, _ = next(iter(make_dataset(images, labels, batch_size=4, training=False)))
-        assert 0.0 <= float(np.min(x)) and float(np.max(x)) <= 1.0
+        assert float(np.min(x)) >= 0.0 and float(np.max(x)) <= 1.0
 
     def test_evaluation_order_is_deterministic(self, samples):
         """Predictions are matched to labels by position, so eval must not shuffle."""
         images, labels = build_cache(samples, size=(32, 32))
 
-        first = np.concatenate([y.numpy() for _, y in make_dataset(images, labels, 4, training=False)])
-        second = np.concatenate([y.numpy() for _, y in make_dataset(images, labels, 4, training=False)])
+        first = np.concatenate(
+            [y.numpy() for _, y in make_dataset(images, labels, 4, training=False)]
+        )
+        second = np.concatenate(
+            [y.numpy() for _, y in make_dataset(images, labels, 4, training=False)]
+        )
 
         assert list(first) == list(second) == [s.label for s in samples]
 

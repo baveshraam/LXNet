@@ -14,11 +14,11 @@ from PIL import Image
 
 from lxnet.data import (
     Sample,
-    index_dataset,
-    dedupe,
-    stratified_split,
-    oversample_to_balance,
     class_weights,
+    dedupe,
+    index_dataset,
+    oversample_to_balance,
+    stratified_split,
 )
 
 

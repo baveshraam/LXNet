@@ -44,9 +44,7 @@ def grad_cam(
 ) -> np.ndarray:
     """Gradient-weighted class activation map, normalised to [0, 1]."""
     layer_name = _feature_layer(model, layer_name)
-    grad_model = tf.keras.Model(
-        model.inputs, [model.get_layer(layer_name).output, model.output]
-    )
+    grad_model = tf.keras.Model(model.inputs, [model.get_layer(layer_name).output, model.output])
 
     batch = tf.convert_to_tensor(image[None], dtype=tf.float32)
     with tf.GradientTape() as tape:
@@ -107,7 +105,7 @@ def score_cam(
     weights /= weights.sum()
 
     heatmap = np.zeros(features.shape[:2], dtype=np.float32)
-    for weight, channel in zip(weights, keep):
+    for weight, channel in zip(weights, keep, strict=True):
         heatmap += weight * features[..., channel]
 
     return _normalise(_resize(heatmap, image.shape[:2]))

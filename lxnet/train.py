@@ -18,13 +18,11 @@ import tensorflow as tf
 from sklearn.model_selection import StratifiedKFold
 
 from .data import (
-    class_weights,
     dedupe,
     distribution,
     group_aware_folds,
     group_aware_split,
     index_dataset,
-    oversample_to_balance,
     stratified_split,
 )
 from .evaluate import compute_metrics, summarise_folds, wilcoxon_compare
@@ -153,10 +151,7 @@ def build_folds(
         ]
 
     splitter = StratifiedKFold(n_splits=folds, shuffle=True, random_state=seed)
-    return [
-        (pool_idx[tr], pool_idx[va])
-        for tr, va in splitter.split(pool_idx, labels[pool_idx])
-    ]
+    return [(pool_idx[tr], pool_idx[va]) for tr, va in splitter.split(pool_idx, labels[pool_idx])]
 
 
 def cross_validate(
@@ -317,9 +312,7 @@ def main(argv=None) -> int:
     train_idx = _index_of(parts["train"], digest_to_row)
     val_idx = _index_of(parts["val"], digest_to_row)
     test_idx = _index_of(parts["test"], digest_to_row)
-    log.info(
-        "split: %d train / %d val / %d test", len(train_idx), len(val_idx), len(test_idx)
-    )
+    log.info("split: %d train / %d val / %d test", len(train_idx), len(val_idx), len(test_idx))
 
     balanced_train = _oversample_indices(train_idx, labels, seed=args.seed)
     log.info("training set balanced: %d -> %d rows", len(train_idx), len(balanced_train))

@@ -60,7 +60,7 @@ def load_image(
     # cv2.resize takes (width, height); size is (height, width).
     resized = cv2.resize(gray, (size[1], size[0]), interpolation=cv2.INTER_AREA)
 
-    scaled = (resized.astype(np.float32) / 255.0)
+    scaled = resized.astype(np.float32) / 255.0
     return np.repeat(scaled[..., None], 3, axis=-1)
 
 

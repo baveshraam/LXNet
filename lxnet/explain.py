@@ -135,7 +135,12 @@ def main(argv=None) -> int:
         raise SystemExit(f"no checkpoint at {weights}; train first")
     model = build_model(args.model)
     model.load_weights(weights)
-    log.info("loaded %s (%d params); rendering %d rows", args.model, model.count_params(), len(rows))
+    log.info(
+        "loaded %s (%d params); rendering %d rows",
+        args.model,
+        model.count_params(),
+        len(rows),
+    )
 
     out = build_panel(
         model, images, rows, list(CLASS_LABELS.values()), args.out, lime_samples=args.lime_samples

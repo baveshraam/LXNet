@@ -8,7 +8,7 @@ incidental detail -- it is the result being replicated, so it is asserted here.
 import numpy as np
 import pytest
 
-from lxnet.models import build_lxnet, build_baseline, BASELINES, NUM_CLASSES
+from lxnet.models import BASELINES, NUM_CLASSES, build_baseline, build_lxnet
 
 # Paper: "approximately 0.35 million parameters".
 LXNET_PARAM_BUDGET = 500_000

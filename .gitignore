@@ -49,3 +49,11 @@ data/
 *.keras
 dataset.zip
 run_both.sh
+
+# Packaging
+*.egg-info/
+build/
+dist/
+.ruff_cache/
+.coverage
+htmlcov/

@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 
 from lxnet.models import build_lxnet
-from lxnet.xai import grad_cam, score_cam, overlay_heatmap
+from lxnet.xai import grad_cam, overlay_heatmap, score_cam
 
 
 @pytest.fixture(scope="module")
@@ -30,7 +30,7 @@ class TestGradCAM:
 
     def test_heatmap_is_normalised_to_unit_range(self, model, image):
         heatmap = grad_cam(model, image)
-        assert 0.0 <= heatmap.min() and heatmap.max() <= 1.0
+        assert heatmap.min() >= 0.0 and heatmap.max() <= 1.0
         assert heatmap.max() == pytest.approx(1.0, abs=1e-5)
 
     def test_contains_no_nans(self, model, image):
@@ -60,7 +60,7 @@ class TestScoreCAM:
 
     def test_heatmap_is_normalised(self, model, image):
         heatmap = score_cam(model, image, max_channels=8)
-        assert 0.0 <= heatmap.min() and heatmap.max() <= 1.0
+        assert heatmap.min() >= 0.0 and heatmap.max() <= 1.0
 
     def test_contains_no_nans(self, model, image):
         assert np.isfinite(score_cam(model, image, max_channels=8)).all()

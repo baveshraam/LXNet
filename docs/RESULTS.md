@@ -58,6 +58,17 @@ Grouping uses exact perceptual-hash equality. Chest X-rays are near-identical by
 | InceptionV3 | 22.33 M | 94.8 | 0.953 | — | — |
 | LXNet | 357 K | 92.9 | 0.938 | 95.4 | +2.5 |
 
+### Every metric, group-aware hold-out
+
+| Model | Accuracy | Precision (macro) | Recall (macro) | Macro-F1 |
+|---|---|---|---|---|
+| ResNet50V2 | 98.50 | 98.70 | 99.02 | 0.9885 |
+| DenseNet201 | 97.39 | 97.77 | 98.20 | 0.9797 |
+| InceptionV3 | 94.78 | 95.13 | 95.69 | 0.9534 |
+| LXNet | 92.88 | 93.16 | 95.06 | 0.9382 |
+
+Macro averaging throughout. The dataset runs 1,340 Normal against 544 Chest Changes, so a micro average would flatter any model that neglects the small classes.
+
 ### Does the small model keep up?
 
 The paper's central claim is that ~0.35 M parameters match backbones 50–70× larger. That claim is only testable on a split where the models can actually be told apart.
@@ -92,28 +103,60 @@ Each fold's early-stopping monitor is carved out of that fold's *training* rows,
   <img alt="Per-class recall" src="fig_per_class.png">
 </picture>
 
-### DenseNet201
+### Per-class detail — LXNet
+
+| Class | Precision | Recall | F1 | Support |
+|---|---|---|---|---|
+| Normal | 93.7 | 88.6 | 0.910 | 201 |
+| Pneumonia | 93.5 | 73.2 | 0.821 | 157 |
+| Higher Density | 88.5 | 100.0 | 0.939 | 100 |
+| Lower Density | 96.8 | 100.0 | 0.984 | 91 |
+| Obstructive Pulmonary | 94.8 | 94.8 | 0.948 | 96 |
+| Degenerative Infectious | 83.0 | 100.0 | 0.907 | 88 |
+| Encapsulated Lesions | 91.4 | 99.0 | 0.950 | 97 |
+| Mediastinal Changes | 96.7 | 100.0 | 0.983 | 88 |
+| Chest Changes | 100.0 | 100.0 | 1.000 | 79 |
+
+### Recall by class, every model
+
+| Class | ResNet50V2 | DenseNet201 | InceptionV3 | LXNet |
+|---|---|---|---|---|
+| Normal | 97.5 | 94.5 | 96.0 | 88.6 |
+| Pneumonia | 93.6 | 92.4 | 82.2 | 73.2 |
+| Higher Density | 100.0 | 100.0 | 100.0 | 100.0 |
+| Lower Density | 100.0 | 100.0 | 97.8 | 100.0 |
+| Obstructive Pulmonary | 100.0 | 100.0 | 93.8 | 94.8 |
+| Degenerative Infectious | 100.0 | 100.0 | 96.6 | 100.0 |
+| Encapsulated Lesions | 100.0 | 96.9 | 94.8 | 99.0 |
+| Mediastinal Changes | 100.0 | 100.0 | 100.0 | 100.0 |
+| Chest Changes | 100.0 | 100.0 | 100.0 | 100.0 |
+
+The weakest cells are the ones that matter clinically: every model gives up most of its accuracy on Pneumonia and Normal, the two classes a screening tool exists to separate.
+
+### Confusion matrices
+
+**DenseNet201**
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="fig_confusion_DenseNet201-dark.png">
   <img alt="DenseNet201 confusion matrix" src="fig_confusion_DenseNet201.png">
 </picture>
 
-### InceptionV3
+**InceptionV3**
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="fig_confusion_InceptionV3-dark.png">
   <img alt="InceptionV3 confusion matrix" src="fig_confusion_InceptionV3.png">
 </picture>
 
-### LXNet
+**LXNet**
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="fig_confusion_LXNet-dark.png">
   <img alt="LXNet confusion matrix" src="fig_confusion_LXNet.png">
 </picture>
 
-### ResNet50V2
+**ResNet50V2**
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="fig_confusion_ResNet50V2-dark.png">
@@ -127,11 +170,26 @@ Each fold's early-stopping monitor is carved out of that fold's *training* rows,
   <img alt="Validation accuracy per epoch" src="fig_training.png">
 </picture>
 
+## Training cost
+
+| Model | Parameters | Epochs run | Wall clock | Accuracy per M params |
+|---|---|---|---|---|
+| LXNet | 356,585 | 40 | 38m 1s | 260.5 |
+| DenseNet201 | 18,816,073 | 40 | 27m 8s | 5.2 |
+| InceptionV3 | 22,329,641 | 40 | 12m 19s | 4.2 |
+| ResNet50V2 | 24,091,657 | 40 | 12m 54s | 4.1 |
+
+The last column is deliberately crude, but it is the paper's argument in one number: LXNet extracts far more accuracy per parameter than any backbone, while still finishing below all of them in absolute terms.
+
+## Significance testing
+
+Not run. The Wilcoxon signed-rank test compares two models across paired folds, and only 1 model (LXNet) was cross-validated — the heavy backbones are hold-out only for time reasons. Cross-validate a second model to populate this section.
+
 ## Dataset after cleaning
 
-- images indexed: 6,741
+- byte-unique images retained: 6,657
 - byte-identical duplicates removed: 84
-- cross-class label conflicts removed: 1
+- cross-class label conflict groups removed: 1
 - split (train/val/test): 4660/1000/997
 - random-split test images with a training twin: 40.4%
 
@@ -142,5 +200,19 @@ python -m lxnet.train --out-dir runs/grouped --split-mode grouped --cv-models LX
 python -m lxnet.train --out-dir runs/random --split-mode random --models LXNet --cv-models LXNet
 python -m lxnet.report
 ```
+
+## Reproducibility record
+
+| | Group-aware arm | Random arm |
+|---|---|---|
+| Split mode | `grouped` | `random` |
+| Train / val / test | 4660 / 1000 / 997 | 4660 / 999 / 998 |
+| Seed | 42 | 42 |
+| Max epochs | 40, early stopping patience 8 | 40, early stopping patience 8 |
+| Batch size | 32 | 32 |
+
+Both arms consume the same cached CLAHE'd tensor, so preprocessing is bit-for-bit identical between them. The only variable is the split function.
+
+Every figure on this page is generated by `python -m lxnet.report` from `results.json`; none is drawn by hand.
 
 <sub>Figures render light or dark to match your GitHub theme. Palette validated for colour-vision deficiency in both modes.</sub>

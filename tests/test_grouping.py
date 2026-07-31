@@ -8,6 +8,7 @@ reports 98% and means none of it.
 
 These tests pin the fix: perceptual grouping, then split whole groups.
 """
+
 from pathlib import Path
 
 import numpy as np
@@ -54,9 +55,9 @@ def test_perceptual_digest_is_stable_for_identical_content(tmp_path, base_image)
 
 def test_perceptual_digest_survives_recompression_and_resize(tmp_path, base_image):
     a = _write(tmp_path / "a.png", base_image)
-    _write(tmp_path / "b.jpg", base_image, quality=60)          # re-compressed
+    _write(tmp_path / "b.jpg", base_image, quality=60)  # re-compressed
     big = np.asarray(Image.fromarray(base_image).resize((128, 128), Image.LANCZOS))
-    _write(tmp_path / "c.png", big)                              # resized
+    _write(tmp_path / "c.png", big)  # resized
     d = data.perceptual_digest
     assert d(a) == d(tmp_path / "b.jpg"), "JPEG recompression must not change the group"
     assert d(a) == d(tmp_path / "c.png"), "resizing must not change the group"
@@ -85,7 +86,11 @@ def test_group_aware_split_keeps_near_duplicates_together(tmp_path, base_image):
     for ci, folder in enumerate(sorted(data.CLASS_LABELS)):
         d = tmp_path / f"{folder} Class"
         for i in range(12):
-            img = (base_image.astype(int) + rng.integers(-90, 90) + ci * 7).clip(0, 255).astype(np.uint8)
+            img = (
+                (base_image.astype(int) + rng.integers(-90, 90) + ci * 7)
+                .clip(0, 255)
+                .astype(np.uint8)
+            )
             _write(d / f"img_{i}.png", img)
             if i % 3 == 0:  # every third image gets a re-compressed twin
                 _write(d / f"img_{i}_copy.jpg", img, quality=55)
@@ -109,7 +114,11 @@ def test_group_aware_split_is_disjoint_and_total(tmp_path, base_image):
     for ci, folder in enumerate(sorted(data.CLASS_LABELS)):
         d = tmp_path / f"{folder} Class"
         for i in range(10):
-            img = (base_image.astype(int) + rng.integers(-90, 90) + ci * 5).clip(0, 255).astype(np.uint8)
+            img = (
+                (base_image.astype(int) + rng.integers(-90, 90) + ci * 5)
+                .clip(0, 255)
+                .astype(np.uint8)
+            )
             _write(d / f"img_{i}.png", img)
     samples, _ = data.dedupe(data.index_dataset(tmp_path))
     parts = data.group_aware_split(samples, seed=3)
@@ -125,7 +134,11 @@ def test_group_aware_split_is_deterministic(tmp_path, base_image):
     for ci, folder in enumerate(sorted(data.CLASS_LABELS)):
         d = tmp_path / f"{folder} Class"
         for i in range(10):
-            img = (base_image.astype(int) + rng.integers(-90, 90) + ci * 5).clip(0, 255).astype(np.uint8)
+            img = (
+                (base_image.astype(int) + rng.integers(-90, 90) + ci * 5)
+                .clip(0, 255)
+                .astype(np.uint8)
+            )
             _write(d / f"img_{i}.png", img)
     samples, _ = data.dedupe(data.index_dataset(tmp_path))
     a = data.group_aware_split(samples, seed=11)["test"]
@@ -139,7 +152,11 @@ def test_group_aware_folds_never_split_a_group(tmp_path, base_image):
     for ci, folder in enumerate(sorted(data.CLASS_LABELS)):
         d = tmp_path / f"{folder} Class"
         for i in range(12):
-            img = (base_image.astype(int) + rng.integers(-90, 90) + ci * 6).clip(0, 255).astype(np.uint8)
+            img = (
+                (base_image.astype(int) + rng.integers(-90, 90) + ci * 6)
+                .clip(0, 255)
+                .astype(np.uint8)
+            )
             _write(d / f"img_{i}.png", img)
             if i % 4 == 0:
                 _write(d / f"img_{i}_twin.jpg", img, quality=55)
@@ -164,7 +181,11 @@ def test_build_folds_grouped_is_leak_free_at_index_level(tmp_path, base_image):
     for ci, folder in enumerate(sorted(data.CLASS_LABELS)):
         d = tmp_path / f"{folder} Class"
         for i in range(12):
-            img = (base_image.astype(int) + rng.integers(-90, 90) + ci * 6).clip(0, 255).astype(np.uint8)
+            img = (
+                (base_image.astype(int) + rng.integers(-90, 90) + ci * 6)
+                .clip(0, 255)
+                .astype(np.uint8)
+            )
             _write(d / f"img_{i}.png", img)
             if i % 4 == 0:
                 _write(d / f"img_{i}_twin.jpg", img, quality=55)

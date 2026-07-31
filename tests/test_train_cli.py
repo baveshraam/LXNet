@@ -1,4 +1,5 @@
 """CLI-level guarantees: the GPU guard and the CV early-stopping separation."""
+
 import numpy as np
 import pytest
 import tensorflow as tf

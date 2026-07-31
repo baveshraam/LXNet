@@ -11,10 +11,10 @@ from __future__ import annotations
 import hashlib
 import logging
 from collections import Counter, defaultdict
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
-from typing import Iterable, Sequence
 
 import numpy as np
 from PIL import Image
@@ -167,7 +167,7 @@ def stratified_split(
     return parts
 
 
-@lru_cache(maxsize=None)
+@cache
 def _dhash(path_str: str, hash_size: int = 8) -> str:
     """Difference hash: compare each pixel to its right neighbour on a tiny grey thumbnail.
 
@@ -266,7 +266,7 @@ def group_aware_split(
         raise ValueError(f"fractions must sum to 1.0, got {fractions}")
 
     rng = np.random.default_rng(seed)
-    targets = dict(zip(("train", "val", "test"), fractions))
+    targets = dict(zip(("train", "val", "test"), fractions, strict=True))
 
     # A group is assigned the label most of its members carry.
     by_label: dict[int, list[list[Sample]]] = defaultdict(list)
