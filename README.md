@@ -31,10 +31,14 @@ lxnet-predict chest_xray.jpg
 ```
 
 ```
-Pneumonia                0.947
-Normal                   0.031
-Obstructive Pulmonary    0.011
+  Pneumonia                  0.949
+  Normal                     0.041
+  Encapsulated Lesions       0.010
 ```
+
+Real output on a held-out pneumonia film. It does not always land — the file
+immediately before this one in the same folder returns *Encapsulated Lesions* at
+0.796, which is what a 73% recall looks like from the inside.
 
 ---
 
