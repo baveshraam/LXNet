@@ -195,7 +195,7 @@ def _gap_dumbbell(rows: list[dict], stem: Path, t: Theme) -> Path | None:
         return None
     paired = sorted(paired, key=lambda r: r["inflation"] or 0)
 
-    fig, ax = _fig(t, 8.0, 0.82 * len(paired) + 2.4, yaxis_grid=False)
+    fig, ax = _fig(t, 8.0, max(2.9, 0.85 * len(paired) + 2.0), yaxis_grid=False)
     ax.grid(axis="x", color=t.grid, linewidth=0.8)
     y = np.arange(len(paired))
 
@@ -220,7 +220,7 @@ def _gap_dumbbell(rows: list[dict], stem: Path, t: Theme) -> Path | None:
     lo = min(100 * r["grouped_accuracy"] for r in paired)
     hi = max(100 * r["random_accuracy"] for r in paired)
     ax.set_xlim(lo - 6, hi + 4)
-    ax.set_ylim(-0.7, len(paired) - 0.25)
+    ax.set_ylim(-0.62, len(paired) - 0.38)
     ax.set_xlabel("Test accuracy (%)", color=t.muted, fontsize=9)
     ax.set_title(
         "What leakage was worth\nEach line is one model measured twice on identical data",
