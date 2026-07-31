@@ -36,6 +36,7 @@ Measured results, figures and the per-model gap: **[docs/RESULTS.md](docs/RESULT
 | Metrics + Wilcoxon | done, 14 tests |
 | Grad-CAM / Score-CAM / LIME | done, 13 tests |
 | Figures + results table | done, 8 tests |
+| Interpretability panel | done, 4 tests |
 | Full training run | see `runs/`, results in `docs/` |
 
 ## Dataset
@@ -101,6 +102,9 @@ python -m lxnet.train --out-dir runs/random --split-mode random --models LXNet -
 # figures + docs/RESULTS.md
 python -m lxnet.report
 
+# interpretability panel: one row per class, Grad-CAM / Score-CAM / LIME
+python -m lxnet.explain --run-dir runs/grouped --out docs/fig_xai.png
+
 # quick sanity check
 python -m lxnet.train --models LXNet --epochs 2 --limit 300 --skip-cv --out-dir runs/smoke
 ```
@@ -121,7 +125,7 @@ Preprocessing is cached to `runs/<name>/preprocessed.npz` as CLAHE'd grayscale u
 ## Tests
 
 ```bash
-pytest -q               # 104 tests
+pytest -q               # 108 tests
 pytest -m "not slow"    # skips baseline construction (downloads ImageNet weights)
 ```
 
@@ -138,6 +142,7 @@ lxnet/
   train.py       hold-out and k-fold orchestration, CLI
   evaluate.py    metrics, fold summaries, Wilcoxon signed-rank
   xai.py         Grad-CAM, Score-CAM, LIME, overlays
+  explain.py     per-class interpretability panel from a checkpoint
   report.py      figures and the results table
 tests/           the leakage guarantees are pinned here
 ```
