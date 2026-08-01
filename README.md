@@ -9,8 +9,9 @@
 [![TensorFlow](https://img.shields.io/badge/tensorflow-2.10.1-eb6834)](https://www.tensorflow.org/)
 [![Tests](https://img.shields.io/badge/tests-133-1baf7a)](tests/)
 [![Model card](https://img.shields.io/badge/model%20card-read-eda100)](docs/MODEL_CARD.md)
+[![Technical report](https://img.shields.io/badge/technical%20report-pdf-2a78d6)](docs/report/LXNet_Technical_Report.pdf)
 
-**[Results](docs/RESULTS.md) · [Model card](docs/MODEL_CARD.md) · [Quickstart](#quickstart)**
+**[Results](docs/RESULTS.md) · [Model card](docs/MODEL_CARD.md) · [Technical report](docs/report/LXNet_Technical_Report.pdf) · [Quickstart](#quickstart)**
 
 </div>
 
